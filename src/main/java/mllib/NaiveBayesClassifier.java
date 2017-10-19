@@ -14,19 +14,25 @@ import java.util.*;
  * @date： 2017/10/18
  * @package_name: mllib
  */
-//朴素贝叶斯算法
+//朴素贝叶斯算法，本版本只是demo，只能用与特征为1和0的训练
 public class NaiveBayesClassifier {
     private double[] w;//权值向量组
     private ArrayList<Point> arrayList;
     private int labelNums; // 类别数量
     private double lambda = 1; //平滑因子
-    private int featuresNums;
-    private int counts;
+    private int featuresNums; // 特征数量
+    private int counts; // 训练样本数
     private HashMap<Double, Integer> labelAndCounts = new HashMap<Double, Integer>(); //每个类别出现的次数
     private HashMap<Double, Double> labelAndProb = new HashMap<Double, Double>(); //每个类别出现的次数
     private HashMap<Double, HashMap<Double, Integer>> sumTermFreq = new HashMap<Double, HashMap<Double, Integer>>();
     private HashMap<Double, HashMap<Double, Double>> theta = new HashMap<Double, HashMap<Double, Double>>();
 
+    /**
+     * Description:构造方法，进行初始化
+     *
+     * @param arrayList:训练集合
+     * @param lambda:平滑指数
+     */
     public NaiveBayesClassifier(ArrayList<Point> arrayList, double lambda) {
         this.arrayList = arrayList;
         this.lambda = lambda;
@@ -45,6 +51,11 @@ public class NaiveBayesClassifier {
 
     }
 
+    /**
+     * Description:构造方法，初始化
+     *
+     * @param arrayList:训练集合
+     */
     public NaiveBayesClassifier(ArrayList<Point> arrayList) {
         this.arrayList = arrayList;
         this.lambda = 1.;
@@ -62,16 +73,20 @@ public class NaiveBayesClassifier {
         this.labelNums = set.size();
     }
 
+    /**
+     * Description: 训练过程
+     */
     public void Train() {
-        Iterator iter = labelAndCounts.entrySet().iterator();
+        //可修改，训练过程可以认为初始化
+        Iterator iter = labelAndCounts.entrySet().iterator();//遍历每一类别的统计数
         while (iter.hasNext()) {
+            //计算每一类别的统计后的log化的概率
             Map.Entry entry = (Map.Entry) iter.next();
             double key = (Double) entry.getKey();
             int val = (Integer) entry.getValue();
             labelAndProb.put(key, Math.log((val + lambda) / (counts + labelNums * lambda)));
-            System.out.println(key + ":" + labelAndProb.get(key));
         }
-
+        //遍历训练集合
         for (Point point : arrayList) {
             double label = point.y;
             double[] x = point.x;
@@ -96,7 +111,6 @@ public class NaiveBayesClassifier {
                 }
             }
             sumTermFreq.put(label, freq);
-            System.out.println(sumTermFreq);
         }
 
 
@@ -104,7 +118,7 @@ public class NaiveBayesClassifier {
         while (labelIter.hasNext()) {
             Map.Entry entry = labelIter.next();
             double label = (Double) entry.getKey();
-            double thetaLogDeamon = -Math.log(labelAndCounts.get(label) + 2.0 * lambda);
+            double thetaLogDeamon = Math.log(labelAndCounts.get(label) + 2.0 * lambda);
             HashMap<Double, Integer> freq = sumTermFreq.get(label);
             HashMap<Double, Double> prob = new HashMap<Double, Double>();
             for (int j = 0; j < featuresNums; j++) {
@@ -112,12 +126,12 @@ public class NaiveBayesClassifier {
                 prob.put((double) j, value);
             }
             theta.put(label, prob);
-            System.out.println("*****");
-            System.out.println(prob);
-            System.out.println(theta);
         }
     }
 
+    /**
+     * Description:输出每一类别的概率
+     */
     public void printTheta() {
         Iterator iter = theta.entrySet().iterator();
         while (iter.hasNext()) {
@@ -126,11 +140,15 @@ public class NaiveBayesClassifier {
         }
     }
 
-
+    /**
+     * Description:预测单个数据
+     *
+     * @param x:数据点
+     * @return
+     */
     public double Predictor(double[] x) {
         System.out.println(Arrays.toString(x));
         HashMap<Double, Double> probabilityMap = new HashMap<Double, Double>();
-        //double probability =1.;
         Iterator labelAndProbability = labelAndProb.entrySet().iterator();
         while (labelAndProbability.hasNext()) {
             Map.Entry entry = (Map.Entry) labelAndProbability.next();

@@ -1,5 +1,7 @@
 package mllib;
 
+import java.io.File;
+import java.io.FileInputStream;
 import java.util.*;
 
 /**
@@ -187,7 +189,7 @@ public class Bayes {
     }
 
     /**
-     * Description:将分词后的文章转化成字典对应的向量
+     * Description:将分词后的文章转化成字典对应的向量(出现与否)
      *
      * @param vocabList 字典
      * @param document  文章
@@ -198,6 +200,25 @@ public class Bayes {
         for (Object word : document) {
             if (vocabList.indexOf(word) > -1) {
                 returnVec[vocabList.indexOf(word)] = 1;
+            } else {
+                System.out.println(word + " is not in my vocabulary list.");
+            }
+        }
+        return returnVec;
+    }
+
+    /**
+     * Description:将分词后的文章转化成字典对应的向量,计数
+     *
+     * @param vocabList 字典
+     * @param document  文章
+     * @return 返回词语向量
+     */
+    public static int[] bagOfWordsVec(List vocabList, List<Object> document) {
+        int[] returnVec = new int[vocabList.size()];
+        for (Object word : document) {
+            if (vocabList.indexOf(word) > -1) {
+                returnVec[vocabList.indexOf(word)] += 1;
             } else {
                 System.out.println(word + " is not in my vocabulary list.");
             }
@@ -292,6 +313,93 @@ public class Bayes {
         return maxClass.toString();
     }
 
+    /**
+     * Description: 简单进行英文字符串分词
+     *
+     * @param bigString 字符串
+     * @return 返回分词后的列表
+     */
+    public static List<Object> textParse(String bigString) {
+        String[] listOfTokens = bigString.split("\\W+");
+        List<Object> listOfString = new ArrayList<Object>();
+        for (String vec : listOfTokens) {
+            if (vec.length() > 2) {
+                listOfString.add(vec.toLowerCase());
+            }
+        }
+        return listOfString;
+    }
+
+    public static String readFile(String path) {
+        File file = new File(path);
+        Long fileLengthLong = file.length();
+        byte[] fileContent = new byte[fileLengthLong.intValue()];
+        try {
+            FileInputStream inputStream = new FileInputStream(file);
+            inputStream.read(fileContent);
+            inputStream.close();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        String string = new String(fileContent);
+        return string;
+    }
+
+    /**
+     * 自带数据测试
+     */
+    public static void spamTest() {
+        String dataDirectory = "D:\\projects\\MachineLearning\\data\\email\\";
+        String spamDataDirectory = dataDirectory + "spam\\";
+        String hamDataDirectory = dataDirectory + "ham\\";
+
+        List<List<Object>> docList = new ArrayList<List<Object>>();
+        List<Object> classList = new ArrayList<Object>();
+        List<List<Object>> fullList = new ArrayList<List<Object>>();
+
+        for (int i = 1; i < 26; i++) {
+            String spamString = readFile(spamDataDirectory + i + ".txt");
+            List<Object> wordList = textParse(spamString);
+            docList.add(wordList);
+            fullList.add(wordList);
+            classList.add(1);
+            String hamString = readFile(hamDataDirectory + i + ".txt");
+            List<Object> wordList2 = textParse(hamString);
+            docList.add(wordList2);
+            fullList.add(wordList2);
+            classList.add(0);
+        }
+        List<Object> vocabList = createVocabList(docList);
+        List<Integer> traningSet = new ArrayList<Integer>();
+        for (int i = 0; i < 50; i++) {
+            traningSet.add(i);
+        }
+        List<Integer> testSet = new ArrayList<Integer>();
+        for (int i = 0; i < 10; i++) {
+            int randIndex = new Random().nextInt(traningSet.size());
+            testSet.add(traningSet.get(randIndex));
+            traningSet.remove(randIndex);
+        }
+
+        int[][] trainMatrix = new int[traningSet.size()][vocabList.size()];
+        List<Object> trainCategory = new ArrayList<Object>();
+        int count = 0;
+        for (int docIndex : traningSet) {
+            int[] vec = bagOfWordsVec(vocabList, docList.get(docIndex));
+            System.arraycopy(vec, 0, trainMatrix[count], 0, vec.length);
+            trainCategory.add(classList.get(docIndex));
+            count++;
+        }
+        Map<Object, Double> categoryProb = getCategoryProb(classList.toArray());
+        Map<Object, double[]> categoryAndVect = trainNB0(trainMatrix, classList.toArray(), categoryProb.size());
+
+        for (int docIndex : testSet) {
+            System.out.println(docIndex + Arrays.toString(docList.get(docIndex).toArray()));
+            int[] vec = bagOfWordsVec(vocabList, docList.get(docIndex));
+            Object predict = classifyNB(vec, categoryAndVect, categoryProb);
+            System.out.println("the doc real is " + classList.get(docIndex) + ";" + " predict is " + predict);
+        }
+    }
 
     /**
      * 获取数据
@@ -356,7 +464,9 @@ public class Bayes {
 
 
     public static void main(String[] args) {
-        testingNB();
+//        testingNB();
+//        System.out.println(textParse("abcde ; bcdefasd ; cadfasdf # easdfsd"));
+        spamTest();
     }
 
 }

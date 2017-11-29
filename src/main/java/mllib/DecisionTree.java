@@ -249,13 +249,11 @@ public class DecisionTree {
     public static void main(String[] args) {
         Object[][] dataSet = createDataSet();
         List<Object> labels = createLabels();
-//        System.out.println(labels);
-//        System.out.println(labels.indexOf("no surfacing"));
         HashMap<Object, HashMap<Object, Object>> myTree = (HashMap) createTree(dataSet, labels);
         System.out.println(myTree);
         List<Object> newLabels = createLabels();
-        Object[] testVec = {1,1};
-        Object a = classify(myTree,newLabels,testVec);
+        Object[] testVec = {1, 1};
+        Object a = classify(myTree, newLabels, testVec);
         System.out.println(a);
     }
 

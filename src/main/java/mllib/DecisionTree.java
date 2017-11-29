@@ -219,11 +219,44 @@ public class DecisionTree {
         return myTree;
     }
 
+    public static Object classify(Object inputTree, List<Object> featLabels, Object[] testVec) {
+        Object classLabel;
+        if (inputTree instanceof Map) {
+            Set keys = ((Map) inputTree).keySet();
+            Object firstStr = keys.iterator().next();
+            Object secondMap = ((Map) inputTree).get(firstStr);
+            int featIndex = featLabels.indexOf(firstStr);
+            if (secondMap instanceof Map) {
+                for (Object secondKey : ((Map) secondMap).keySet()) {
+                    if (testVec[featIndex] == secondKey) {
+                        if (((Map) secondMap).get(secondKey) instanceof Map) {
+                            classLabel = classify(((Map) secondMap).get(secondKey), featLabels, testVec);
+                            return classLabel;
+                        } else {
+                            classLabel = ((Map) secondMap).get(secondKey);
+                            return classLabel;
+                        }
+                    }
+                }
+            } else {
+                return secondMap;
+            }
+        }
+        return inputTree;
+
+    }
+
     public static void main(String[] args) {
         Object[][] dataSet = createDataSet();
         List<Object> labels = createLabels();
+//        System.out.println(labels);
+//        System.out.println(labels.indexOf("no surfacing"));
         HashMap<Object, HashMap<Object, Object>> myTree = (HashMap) createTree(dataSet, labels);
         System.out.println(myTree);
+        List<Object> newLabels = createLabels();
+        Object[] testVec = {1,1};
+        Object a = classify(myTree,newLabels,testVec);
+        System.out.println(a);
     }
 
 
